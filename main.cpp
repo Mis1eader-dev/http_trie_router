@@ -16,10 +16,10 @@
 
 #include <cstddef>
 #include <iostream>
-#include <unordered_map>
-#include <vector>
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <vector>
 
 using std::cout;
 using std::string;
@@ -32,7 +32,6 @@ struct RedirectLocation
 
 struct RedirectFrom
 {
-	size_t id;
 	string host, path;
 	bool isWildcard = false;
 	size_t toIdx;
@@ -253,7 +252,6 @@ static void initAndStart(
 				redirectFromPath = '/';
 
 			rulesFromData_.push_back({
-				.id = rulesFromData_.size(),
 				.host = std::move(redirectFromHost.empty() && pathIdx != 0 ? redirectFromStr
 												: redirectFromHost),
 				.path = std::move(redirectFromPath),
