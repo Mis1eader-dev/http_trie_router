@@ -146,9 +146,8 @@ int main()
 		},
 	}};
 
-	initAndStart(config);
-
 	cout << "-- Generating map --\n";
+	initAndStart(config);
 	printMap();
 
 	cout << "\n-- Starting lookup --\n";
