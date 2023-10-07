@@ -45,7 +45,7 @@ struct RedirectGroup
 	RedirectLocation* to = nullptr, *wildcard = nullptr;
 };
 
-static std::unordered_map<std::string, RedirectGroup> rulesFrom_;
+static std::unordered_map<string_view, RedirectGroup> rulesFrom_;
 static std::vector<RedirectLocation> rulesTo_;
 static std::vector<RedirectFrom> rulesFromData_;
 
