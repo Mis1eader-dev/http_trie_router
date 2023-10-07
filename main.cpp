@@ -455,12 +455,13 @@ static void redirectingAdvice(const string& reqHost, const string& reqPath)
 {
 	string host, path = reqPath;
 
-	// Lookup within non-host rules
+	// Lookup within non-host rules first
 	lookup(host, path);
-	if(host.empty()) // Not altered
+	if(host.empty()) // Not altered, meaning only path could have changed
+	{
 		host = reqHost;
-
-	lookup(host, path);
+		lookup(host, path);
+	}
 
 	bool hostChanged = host != reqHost;
 	if(hostChanged || path != reqPath)
