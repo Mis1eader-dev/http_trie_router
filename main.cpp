@@ -274,8 +274,12 @@ static void initAndStart(
 	// Find minimum required path length for each host
 	for(const auto& redirectFrom : rulesFromData_)
 	{
-		auto len = redirectFrom.path.size();
+		const auto& path = redirectFrom.path;
 		auto& rule = rulesFrom_[redirectFrom.host];
+		if(path == "/") // Root rules are part of the host group
+			continue;
+
+		auto len = path.size();
 		if(len < rule.maxPathLen)
 			rule.maxPathLen = len;
 	}
@@ -285,6 +289,12 @@ static void initAndStart(
 	{
 		string_view path = redirectFrom.path;
 		auto& rule = rulesFrom_[redirectFrom.host];
+		if(path == "/")
+		{
+			(redirectFrom.isWildcard ? rule.wildcard : rule.to) = &rulesTo_[redirectFrom.toIdx];
+			continue;
+		}
+
 		size_t maxLen = rule.maxPathLen;
 
 		string_view pathGroup = path.substr(0, maxLen);
@@ -369,6 +379,26 @@ static void lookup(string& host, string& path)
 		auto findHost = rulesFrom_.find(host);
 		if(findHost == rulesFrom_.end())
 			break;
+
+		if(path == "/")
+		{
+			const RedirectGroup& group = findHost->second;
+			const RedirectLocation* location = group.to;
+			if(location) // Strict takes priority
+			{
+				host = location->host;
+				path = location->path;
+				continue;
+			}
+			location = group.wildcard;
+			if(location) // If strict didn't match, then it could match wildcard
+			{
+				host = location->host;
+				path = location->path;
+				continue;
+			}
+			break; // Neither exist for root
+		}
 
 		bool isWildcard = true;
 		const RedirectLocation* to = nullptr;
