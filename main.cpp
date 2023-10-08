@@ -213,6 +213,11 @@ int main()
 
 	redirectingAdvice("cyclic1.example.com", "/cyclic");
 	redirectingAdvice("cyclic2.example.com", "/cyclic");
+
+	redirectingAdvice("random.example.com", "/");
+	redirectingAdvice("localhost", "/");
+	redirectingAdvice("localhost", "/home");
+	redirectingAdvice("localhost", "/home/strict");
 }
 
 static void initAndStart(
