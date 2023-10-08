@@ -172,6 +172,7 @@ int main()
 
 	redirectingAdvice("image.example.com", "/");
 	redirectingAdvice("image.example.com", "/places");
+	redirectingAdvice("www.example.com", "/ima");
 	redirectingAdvice("www.example.com", "/image");
 	redirectingAdvice("www.example.com", "/image/png");
 	redirectingAdvice("www.example.com", "/images");
@@ -421,14 +422,14 @@ static void lookup(string& host, string& path)
 		for(const RedirectGroup* group = &(findHost->second); ; group = find->second)
 		{
 			const RedirectLocation* location = group->wildcard;
-			if(location && (pathView.empty() || pathView.front() == '/' || find->first == "/"))
+			bool pathIsExhausted = pathView.empty();
+			if(location && (pathIsExhausted || pathView.front() == '/'))
 			{
 				to = location;
 				lastWildcardPathViewLen = pathView.size();
 			}
 
 			const auto& groups = group->groups;
-			bool pathIsExhausted = pathView.empty();
 			auto maxPathLen = group->maxPathLen;
 			if(!maxPathLen || pathIsExhausted) // Final node or path is shorter than tree
 			{
@@ -492,8 +493,8 @@ static void redirectingAdvice(const string& reqHost, const string& reqPath)
 
 static void recurse(const RedirectGroup* parent, size_t tabs = 1)
 {
-	auto more = tabs + 1;
-	for(auto& [groupPath, group] : parent->groups)
+	const auto more = tabs + 1;
+	for(const auto& [groupPath, group] : parent->groups)
 	{
 		for(auto t = tabs; t; --t)
 			cout << '\t';
@@ -505,7 +506,7 @@ static void recurse(const RedirectGroup* parent, size_t tabs = 1)
 }
 static void printMap()
 {
-	for(auto& rule : rulesFrom_)
+	for(const auto& rule : rulesFrom_)
 	{
 		cout << rule.first << ":\n";
 		recurse(&rule.second);
