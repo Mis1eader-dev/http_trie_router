@@ -40,7 +40,7 @@ struct RedirectFrom
 struct RedirectGroup
 {
 	std::unordered_map<string_view, RedirectGroup*> groups;
-	size_t maxPathLen = string::npos;
+	size_t maxPathLen = string_view::npos;
 	RedirectLocation* to = nullptr, *wildcard = nullptr;
 };
 
@@ -142,6 +142,18 @@ int main()
 					"/strict",
 				}
 			},
+
+			// Cyclic host
+			{
+				"cyclic1.example.com/final", {
+					"cyclic2.example.com/cyclic"
+				}
+			},
+			{
+				"cyclic2.example.com/cyclic", {
+					"cyclic1.example.com/cyclic"
+				}
+			},
 		},
 	}};
 
@@ -197,6 +209,9 @@ int main()
 	redirectingAdvice("10.10.10.1", "/strict/rule");
 	redirectingAdvice("www.example.com", "/strict");
 	redirectingAdvice("www.example.com", "/strict/rule");
+
+	redirectingAdvice("cyclic1.example.com", "/cyclic");
+	redirectingAdvice("cyclic2.example.com", "/cyclic");
 }
 
 static void initAndStart(
