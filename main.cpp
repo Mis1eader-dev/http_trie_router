@@ -278,7 +278,7 @@ static void initAndStart(
 
 	struct RedirectDepthGroup
 	{
-		std::vector<const RedirectFrom*> fromDatas;
+		std::vector<const RedirectFrom*> fromData;
 		size_t maxPathLen;
 	};
 
@@ -331,7 +331,7 @@ static void initAndStart(
 		}
 
 		auto& leaf = leafs[group];
-		leaf.fromDatas.push_back(&redirectFrom);
+		leaf.fromData.push_back(&redirectFrom);
 		leaf.maxPathLen = maxLen;
 	}
 
@@ -341,8 +341,8 @@ static void initAndStart(
 		for(auto& [group, depthGroup] : leafs)
 		{
 			size_t minIdx = depthGroup.maxPathLen, maxIdx = string::npos;
-			const auto& fromDatas = depthGroup.fromDatas;
-			for(const auto& redirectFrom : fromDatas)
+			const auto& fromData = depthGroup.fromData;
+			for(const auto& redirectFrom : fromData)
 			{
 				auto len = redirectFrom->path.size();
 				if(len >= minIdx && len < maxIdx)
@@ -351,7 +351,7 @@ static void initAndStart(
 
 			size_t maxLen = maxIdx - minIdx;
 			group->maxPathLen = maxLen;
-			for(const auto& redirectFrom : fromDatas)
+			for(const auto& redirectFrom : fromData)
 			{
 				string_view path = redirectFrom->path;
 				string_view pathGroup = path.substr(minIdx, maxLen);
@@ -375,7 +375,7 @@ static void initAndStart(
 				}
 
 				auto& leaf = leafsBackbuffer[childGroup];
-				leaf.fromDatas.push_back(redirectFrom);
+				leaf.fromData.push_back(redirectFrom);
 				leaf.maxPathLen = maxIdx;
 			}
 		}
