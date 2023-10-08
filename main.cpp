@@ -143,6 +143,30 @@ int main()
 				}
 			},
 
+			// Path only (with host in redirectTo)
+			{
+				"www.example.com/host", {
+					"/host_redirect",
+				}
+			},
+			{
+				"www.example.com/host_wildcard", {
+					"/host_redirect_wildcard/*",
+				}
+			},
+
+			// Path only (with host in redirectFrom)
+			{
+				"/host2", {
+					"www.example.com/host_redirect2",
+				}
+			},
+			{
+				"/host_wildcard2", {
+					"www.example.com/host_redirect_wildcard2/*",
+				}
+			},
+
 			// Cyclic host
 			{
 				"cyclic1.example.com/final", {
@@ -208,8 +232,23 @@ int main()
 	redirectingAdvice("10.10.10.1", "/ws/controller");
 	redirectingAdvice("10.10.10.1", "/strict");
 	redirectingAdvice("10.10.10.1", "/strict/rule");
+
 	redirectingAdvice("www.example.com", "/strict");
 	redirectingAdvice("www.example.com", "/strict/rule");
+
+	redirectingAdvice("10.10.10.1", "/host_redirect");
+	redirectingAdvice("10.10.10.1", "/host_redirect_wildcard");
+	redirectingAdvice("10.10.10.1", "/host_redirect_wildcard/subdirectory");
+	redirectingAdvice("www.example.com", "/host_redirect");
+	redirectingAdvice("www.example.com", "/host_redirect_wildcard");
+	redirectingAdvice("www.example.com", "/host_redirect_wildcard/subdirectory");
+
+	redirectingAdvice("10.10.10.1", "/host_redirect2");
+	redirectingAdvice("10.10.10.1", "/host_redirect_wildcard2");
+	redirectingAdvice("10.10.10.1", "/host_redirect_wildcard2/subdirectory");
+	redirectingAdvice("www.example.com", "/host_redirect2");
+	redirectingAdvice("www.example.com", "/host_redirect_wildcard2");
+	redirectingAdvice("www.example.com", "/host_redirect_wildcard2/subdirectory");
 
 	redirectingAdvice("cyclic1.example.com", "/cyclic");
 	redirectingAdvice("cyclic2.example.com", "/cyclic");
@@ -459,7 +498,9 @@ static void lookup(string& host, string& path)
 
 		if(to)
 		{
-			host = to->host;
+			const string& toHost = to->host;
+			if(!toHost.empty())host = toHost;
+
 			string newPath = to->path;
 			if(isWildcard)
 			{
@@ -474,14 +515,17 @@ static void lookup(string& host, string& path)
 
 static void redirectingAdvice(const string& reqHost, const string& reqPath)
 {
-	string host, path = reqPath;
+	string host = reqHost, path = reqPath;
 
-	// Lookup within non-host rules first
+	// Lookup host-specific rules first
 	lookup(host, path);
-	if(host.empty()) // Not altered, meaning only path could have changed
+
+	// Lookup within non-host rules
 	{
-		host = reqHost;
-		lookup(host, path);
+		string temp;
+		lookup(temp, path);
+		if(!temp.empty()) // Altered
+			host = std::move(temp);
 	}
 
 	bool hostChanged = host != reqHost;
