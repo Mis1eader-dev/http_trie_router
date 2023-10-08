@@ -241,8 +241,8 @@ static void initAndStart(
 
 		auto toIdx = rulesTo_.size();
 		rulesTo_.push_back({
-			.host = redirectToHost.empty() && pathIdx != 0 ? redirectToStr : redirectToHost,
-			.path = redirectToPath,
+			.host = std::move(redirectToHost.empty() && pathIdx != 0 ? redirectToStr : redirectToHost),
+			.path = std::move(redirectToPath),
 		});
 
 		for(const auto& redirectFrom : redirectFroms)
