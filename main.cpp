@@ -354,7 +354,6 @@ static void initAndStart(
 		}
 
 		size_t maxLen = rule.maxPathLen;
-
 		string_view pathGroup = path.substr(0, maxLen);
 
 		auto& groups = rule.groups;
