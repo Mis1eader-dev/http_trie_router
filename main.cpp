@@ -460,9 +460,8 @@ static void lookup(string& host, string& path)
 		bool isWildcard = true;
 		const RedirectLocation* to = nullptr;
 		size_t lastWildcardPathViewLen = 0;
-		std::unordered_map<string_view, RedirectGroup*>::const_iterator find;
 		string_view pathView = path;
-		for(const RedirectGroup* group = &(findHost->second); ; group = find->second)
+		for(const RedirectGroup* group = &(findHost->second);;)
 		{
 			const RedirectLocation* location = group->wildcard;
 			bool pathIsExhausted = pathView.empty();
@@ -488,11 +487,12 @@ static void lookup(string& host, string& path)
 				break;
 			}
 
-			find = groups.find(pathView.substr(0, maxPathLen));
+			auto find = groups.find(pathView.substr(0, maxPathLen));
 			if(find == groups.end()) // Cannot go deeper
 				break;
 
 			pathView = pathView.substr(maxPathLen);
+			group = find->second;
 		}
 
 		if(to)
@@ -500,13 +500,21 @@ static void lookup(string& host, string& path)
 			const string& toHost = to->host;
 			if(!toHost.empty())host = toHost;
 
-			string newPath = to->path;
 			if(isWildcard)
 			{
-				auto start = path.size() - lastWildcardPathViewLen;
-				newPath.append(path.substr(start + (newPath.back() == '/' && path[start] == '/')));
+				const string& toPath = to->path;
+				string newPath;
+				const auto len = path.size();
+				auto start = len - lastWildcardPathViewLen;
+				start += newPath.back() == '/' && path[start] == '/';
+				newPath.reserve(toPath.size() + (len - start));
+
+				newPath = toPath;
+				newPath.append(path.substr(start));
+				path = std::move(newPath);
 			}
-			path = newPath;
+			else
+				path = to->path;
 		}
 		else break;
 	} while(true);
