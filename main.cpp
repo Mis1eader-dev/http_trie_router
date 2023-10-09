@@ -506,7 +506,7 @@ static void lookup(string& host, string& path)
 				string newPath;
 				const auto len = path.size();
 				auto start = len - lastWildcardPathViewLen;
-				start += newPath.back() == '/' && path[start] == '/';
+				start += toPath.back() == '/' && path[start] == '/';
 				newPath.reserve(toPath.size() + (len - start));
 
 				newPath = toPath;
