@@ -302,7 +302,7 @@ static void initAndStart(
 			}
 
 			string redirectFromHost, redirectFromPath;
-			pathIdx = redirectFromStr.find_first_of('/');
+			pathIdx = redirectFromStr.find('/');
 			if (pathIdx != string::npos)
 			{
 				redirectFromHost = redirectFromStr.substr(0, pathIdx);
