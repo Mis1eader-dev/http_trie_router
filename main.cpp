@@ -44,6 +44,7 @@ struct RedirectGroup
 	RedirectLocation* to = nullptr, *wildcard = nullptr;
 };
 
+static bool doHostLookup_ = false;
 static std::unordered_map<string_view, RedirectGroup> rulesFrom_;
 static std::vector<RedirectLocation> rulesTo_;
 static std::vector<RedirectFrom> rulesFromData_;
@@ -268,7 +269,11 @@ static void initAndStart(
 		>
 	>& config)
 {
+	doHostLookup_ = false;
+
 	const auto& configRules = config.at("rules");
+
+	rulesTo_.reserve(configRules.size());
 
 	// Store config data
 	for(const auto& [redirectTo, redirectFroms] : configRules)
@@ -311,9 +316,14 @@ static void initAndStart(
 			else
 				redirectFromPath = '/';
 
+			const string& fromHost =
+				redirectFromHost.empty() && pathIdx != 0 ?
+				redirectFromStr :
+				redirectFromHost;
+			if(!fromHost.empty())
+				doHostLookup_ = true; // We have hosts in lookup rules
 			rulesFromData_.push_back({
-				.host = std::move(redirectFromHost.empty() && pathIdx != 0 ? redirectFromStr
-												: redirectFromHost),
+				.host = std::move(fromHost),
 				.path = std::move(redirectFromPath),
 				.isWildcard = isWildcard,
 				.toIdx = toIdx,
@@ -498,7 +508,8 @@ static void lookup(string& host, string& path)
 		if(to)
 		{
 			const string& toHost = to->host;
-			if(!toHost.empty())host = toHost;
+			const bool hasToHost = !toHost.empty();
+			if(hasToHost)host = toHost;
 
 			if(isWildcard)
 			{
@@ -515,6 +526,9 @@ static void lookup(string& host, string& path)
 			}
 			else
 				path = to->path;
+
+			if(!doHostLookup_ && hasToHost)
+				break; // If our maps don't contain hosts, no need to look it up next iteration
 		}
 		else break;
 	} while(true);
@@ -522,10 +536,14 @@ static void lookup(string& host, string& path)
 
 static void redirectingAdvice(const string& reqHost, const string& reqPath)
 {
-	string host = reqHost, path = reqPath;
+	string host, path = reqPath;
 
-	// Lookup host-specific rules first
-	lookup(host, path);
+	// Lookup host-specific rules first if they exist
+	if(doHostLookup_ && !reqHost.empty())
+	{
+		host = reqHost;
+		lookup(host, path);
+	}
 
 	// Lookup within non-host rules
 	{
@@ -535,7 +553,7 @@ static void redirectingAdvice(const string& reqHost, const string& reqPath)
 			host = std::move(temp);
 	}
 
-	bool hostChanged = host != reqHost;
+	bool hostChanged = !host.empty() && host != reqHost;
 	if(hostChanged || path != reqPath)
 	{
 		if(hostChanged)
