@@ -514,15 +514,12 @@ static void lookup(string& host, string& path)
 			if(isWildcard)
 			{
 				const string& toPath = to->path;
-				string newPath;
 				const auto len = path.size();
 				auto start = len - lastWildcardPathViewLen;
 				start += toPath.back() == '/' && path[start] == '/';
-				newPath.reserve(toPath.size() + (len - start));
 
-				newPath = toPath;
-				newPath.append(path.substr(start));
-				path = std::move(newPath);
+				path.reserve(toPath.size() + (len - start));
+				path.replace(0, start, toPath);
 			}
 			else
 				path = to->path;
