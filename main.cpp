@@ -290,10 +290,10 @@ static void initAndStart(
 			redirectToPath = '/';
 
 		auto toIdx = rulesTo_.size();
-		rulesTo_.push_back({
-			.host = std::move(redirectToHost.empty() && pathIdx != 0 ? redirectToStr : redirectToHost),
-			.path = std::move(redirectToPath),
-		});
+		rulesTo_.emplace_back(
+			std::move(redirectToHost.empty() && pathIdx != 0 ? redirectToStr : redirectToHost),
+			std::move(redirectToPath)
+		);
 
 		for(const auto& redirectFrom : redirectFroms)
 		{
@@ -322,12 +322,12 @@ static void initAndStart(
 				redirectFromHost;
 			if(!fromHost.empty())
 				doHostLookup_ = true; // We have hosts in lookup rules
-			rulesFromData_.push_back({
-				.host = std::move(fromHost),
-				.path = std::move(redirectFromPath),
-				.isWildcard = isWildcard,
-				.toIdx = toIdx,
-			});
+			rulesFromData_.emplace_back(
+				std::move(fromHost),
+				std::move(redirectFromPath),
+				isWildcard,
+				toIdx
+			);
 		}
 	}
 
@@ -343,11 +343,11 @@ static void initAndStart(
 	for(const auto& redirectFrom : rulesFromData_)
 	{
 		const auto& path = redirectFrom.path;
-		auto& rule = rulesFrom_[redirectFrom.host];
 		if(path == "/") // Root rules are part of the host group
 			continue;
 
 		auto len = path.size();
+		auto& rule = rulesFrom_[redirectFrom.host];
 		if(len < rule.maxPathLen)
 			rule.maxPathLen = len;
 	}
@@ -385,7 +385,7 @@ static void initAndStart(
 		}
 
 		auto& leaf = leafs[group];
-		leaf.fromData.push_back(&redirectFrom);
+		leaf.fromData.emplace_back(&redirectFrom);
 		leaf.maxPathLen = maxLen;
 	}
 
@@ -429,7 +429,7 @@ static void initAndStart(
 				}
 
 				auto& leaf = leafsBackbuffer[childGroup];
-				leaf.fromData.push_back(redirectFrom);
+				leaf.fromData.emplace_back(redirectFrom);
 				leaf.maxPathLen = maxIdx;
 			}
 		}
