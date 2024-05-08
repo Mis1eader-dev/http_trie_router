@@ -290,10 +290,10 @@ static void initAndStart(
 			redirectToPath = '/';
 
 		auto toIdx = rulesTo_.size();
-		rulesTo_.emplace_back(
+		rulesTo_.push_back({
 			std::move(redirectToHost.empty() && pathIdx != 0 ? redirectToStr : redirectToHost),
-			std::move(redirectToPath)
-		);
+			std::move(redirectToPath),
+		});
 
 		for(const auto& redirectFrom : redirectFroms)
 		{
@@ -322,12 +322,12 @@ static void initAndStart(
 				redirectFromHost;
 			if(!fromHost.empty())
 				doHostLookup_ = true; // We have hosts in lookup rules
-			rulesFromData_.emplace_back(
+			rulesFromData_.push_back({
 				std::move(fromHost),
 				std::move(redirectFromPath),
 				isWildcard,
-				toIdx
-			);
+				toIdx,
+			});
 		}
 	}
 
